@@ -13,7 +13,7 @@ public class Player : MonoBehaviour
     public Queue<Tile> path;
     public Tile currentTile;
     public Tile targetTile;
-    Vector3 velocity;
+    public Vector3 velocity;
 
     //properties
     public float slowSpeed = 1.0f;
