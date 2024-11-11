@@ -211,9 +211,11 @@ public class Enemy : MonoBehaviour
 
             case EnemyState.CHASE:
                 material.color = Color.red;
+                path = pathFinder.FindPathAStar(currentTile, playerGameObject.GetComponent<Player>().currentTile);
 
-                if (path.Count > 0) targetTile = path.Dequeue();
-                else targetTile = FindPursuitTile(playerGameObject);
+                targetTile = path.Dequeue();
+                //if (path.Count > 0) targetTile = path.Dequeue();
+                //else targetTile = FindPursuitTile(playerGameObject);
                 state = EnemyState.MOVING;
                 break;
 
@@ -229,7 +231,7 @@ public class Enemy : MonoBehaviour
         switch (state)
         {
             case EnemyState.DEFAULT: // generate random path 
-                material.color = Color.blue;
+                material.color = Color.white;
                 
                 if (path.Count <= 0) path = pathFinder.RandomPath(currentTile, 20);
 
@@ -278,7 +280,7 @@ public class Enemy : MonoBehaviour
                 break;
 
             case EnemyState.CHASE:
-                material.color = Color.red;
+                material.color = Color.white;
 
                 if (path.Count > 0) targetTile = path.Dequeue();
                 else targetTile = FindPursuitTile(playerGameObject);
