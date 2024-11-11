@@ -94,33 +94,6 @@ public class Enemy : MonoBehaviour
         return newTarget;
     }
 
-    // Find a tile to pursue an escaping player
-    private Tile FindPursuitTile(GameObject player)
-    {
-        Tile nextTile = null;
-
-        //Predict target location
-        Vector3 targetVelocity = player.GetComponent<Player>().velocity;
-        float lookaheadTime = 10;
-        Vector3 targetPredictedPosition = player.transform.position + targetVelocity * lookaheadTime;
-
-        //Pursue the target: Find tile in their direction
-        double minAngle = 2 * Mathf.PI;
-        foreach(Tile adjacent in currentTile.Adjacents)
-        {
-            Vector3 adjacentDirection = adjacent.transform.position - transform.position;
-            Vector3 targetDirection = targetPredictedPosition - transform.position;
-            double angle = Mathf.Acos(Vector3.Dot(adjacentDirection.normalized,targetDirection.normalized));
-
-            if(angle < minAngle)
-            {
-                nextTile = adjacent;
-                minAngle = angle;
-            }
-        }
-        return nextTile;
-    }
-
     // Dumb Enemy: Keeps Walking in Random direction, Will not chase player
     private void HandleEnemyBehavior1()
     {
@@ -164,9 +137,10 @@ public class Enemy : MonoBehaviour
     {
         switch (state)
         {
-            case EnemyState.DEFAULT: // generate random path 
+            case EnemyState.DEFAULT:
                 material.color = Color.blue;
                 
+                //generate random path
                 if (path.Count <= 0) path = pathFinder.RandomPath(currentTile, 20);
 
                 if (path.Count > 0)
@@ -211,12 +185,16 @@ public class Enemy : MonoBehaviour
 
             case EnemyState.CHASE:
                 material.color = Color.red;
+
+                //assign path to player's tile
                 path = pathFinder.FindPathAStar(currentTile, playerGameObject.GetComponent<Player>().currentTile);
 
-                targetTile = path.Dequeue();
-                //if (path.Count > 0) targetTile = path.Dequeue();
-                //else targetTile = FindPursuitTile(playerGameObject);
-                state = EnemyState.MOVING;
+                if (path.Count > 0) 
+                {
+                    targetTile = path.Dequeue();
+                    state = EnemyState.MOVING;
+                }
+                else state = EnemyState.DEFAULT;
                 break;
 
             default:
@@ -230,9 +208,10 @@ public class Enemy : MonoBehaviour
     {
         switch (state)
         {
-            case EnemyState.DEFAULT: // generate random path 
-                material.color = Color.white;
+            case EnemyState.DEFAULT:
+                material.color = Color.blue;
                 
+                //generate random path
                 if (path.Count <= 0) path = pathFinder.RandomPath(currentTile, 20);
 
                 if (path.Count > 0)
@@ -259,7 +238,7 @@ public class Enemy : MonoBehaviour
                     if (playerCloseCounter <= 0)
                     {
                         //if player is within visionDistance
-                        if (Vector3.Distance(playerGameObject.transform.position, transform.position) < visionDistance  && Vector3.Distance(playerGameObject.transform.position, transform.position) > 3)
+                        if (Vector3.Distance(playerGameObject.transform.position, transform.position) < visionDistance)
                         {
                             path.Clear();
                             //reset close counter
@@ -280,11 +259,23 @@ public class Enemy : MonoBehaviour
                 break;
 
             case EnemyState.CHASE:
-                material.color = Color.white;
+                material.color = Color.red;
+                
+                //assign path to player's tile
+                path = pathFinder.FindPathAStar(currentTile, playerGameObject.GetComponent<Player>().currentTile);
 
-                if (path.Count > 0) targetTile = path.Dequeue();
-                else targetTile = FindPursuitTile(playerGameObject);
-                state = EnemyState.MOVING;
+                //if available and if enemy is further than 3 tiles away from player
+                if (path.Count > 0 && Vector3.Distance(playerGameObject.transform.position, transform.position) > 3) 
+                {
+                    //dequeue path
+                    targetTile = path.Dequeue();
+                    state = EnemyState.MOVING;
+                }
+                else 
+                {
+                    playerCloseCounter = 0;
+                    state = EnemyState.DEFAULT;
+                }
                 break;
 
             default:
